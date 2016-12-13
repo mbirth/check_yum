@@ -1,10 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-"""Nagios plugin to check the YUM package management system for package updates. Can optionally alert on any available updates as well as just security related updates."""
+"""Check_MK local plugin to check the YUM package management system for package updates. Can optionally alert on any available updates as well as just security related updates."""
 
 __title__ = "check_yum"
 __version__ = "1.1.0"
+
+SVC_NAME = "Updates"
 
 #Standard Nagios return codes
 OK = 0
@@ -34,19 +36,9 @@ def end(status, message, perfdata=""):
     """Exits the plugin with first arg as the return code and the second arg as the message to output."""
     
     if perfdata:
-        print "%s | %s" % (message, perfdata)
+        print "%i %s %s %s" % (status, SVC_NAME, perfdata, message)
     else:
-        print "%s" % message
-    
-    if status == OK:
-        sys.exit(OK)
-    elif status == WARNING:
-        sys.exit(WARNING)
-    elif status == CRITICAL:
-        sys.exit(CRITICAL)
-    else:
-        sys.exit(UNKNOWN)
-
+        print "%i %s - %s" % (status, SVC_NAME, message)
 
 def check_yum_usable():
     """Checks that the YUM program and path are correct and usable - that the program exists and is executable, otherwise exits with error."""
