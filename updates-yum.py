@@ -36,7 +36,11 @@ def end(status, message, perfdata=""):
     """Exits the plugin with first arg as the return code and the second arg as the message to output."""
 
     if perfdata:
-        print "%i %s %s %s" % (status, SVC_NAME, perfdata, message)
+        pstrings = []
+        for p, v in perfdata.items():
+            pstrings.append("'{}'={:d}".format(p.replace(" ", "_"), v))
+        pstring = "|".join(pstrings)
+        print "%i %s %s %s" % (status, SVC_NAME, pstring, message)
     else:
         print "%i %s - %s" % (status, SVC_NAME, message)
     sys.exit()
@@ -338,8 +342,10 @@ class YumTester:
                 message = "1 Update Available"
             else:
                 message = "%s Updates Available" % number_updates
+        
+        perfdata = {"total": number_updates}
 
-        return status, message
+        return status, message, perfdata
 
 
     def test_security_updates(self):
@@ -376,7 +382,9 @@ class YumTester:
             else:
                 message += ". %s Non-Security Updates Available" % number_other_updates
 
-        return status, message
+        perfdata = {"total": (number_security_updates + number_other_updates), "security": number_security_updates, "nonsecurity": number_other_updates}
+
+        return status, message, perfdata
 
 
     def vprint(self, threshold, message):
@@ -460,8 +468,8 @@ def main():
         print "%s - Version %s\n" % (__title__, __version__)
         sys.exit(OK)
 
-    result, output = tester.test_yum_updates()
-    end(result, output)
+    result, output, perfdata = tester.test_yum_updates()
+    end(result, output, perfdata)
 
 
 if __name__ == "__main__":
