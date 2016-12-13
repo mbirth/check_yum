@@ -471,8 +471,8 @@ if __name__ == "__main__":
         end(CRITICAL, "Caught Control-C...")
     except SystemExit:
         raise
-    except:
-        end(UNKNOWN, "check_yum failed for unknown reasons.")
+    except Exception as ex:
+        end(UNKNOWN, "check_yum failed: {}".format(str(ex)))
 
 
 
