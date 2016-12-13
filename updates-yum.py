@@ -24,7 +24,7 @@ try:
 except ImportError:
     OLD_PYTHON = True
     import commands
-from optparse import OptionParser
+from argparse import ArgumentParser
 
 DEFAULT_TIMEOUT = 55
 YUM = "/usr/bin/yum"
@@ -390,64 +390,60 @@ def main():
     """Parses command line options and calls the test function."""
 
     tester = YumTester()
-    parser = OptionParser()
+    parser = ArgumentParser(description="Check_MK local plugin for checking yum for available updates")
 
-    parser.add_option("-A", "--all-updates",
+    parser.add_argument("-A", "--all-updates",
                       action="store_true",
                       dest="all_updates",
                       help="Does not distinguish between security and non-security updates, but returns critical for any available update. This may be used if the YUM security plugin is absent or you want to maintain every single package at the latest version. You may want to use --warn-on-any-update instead of this option.")
 
-    parser.add_option("-W", "--warn-on-any-update",
+    parser.add_argument("-W", "--warn-on-any-update",
                       action="store_true",
                       dest="warn_on_any_update",
                       help="Warns if there are any (non-security) package updates available. By default only warns when security related updates are available. If --all-updates is used, then this option is redundant as --all-updates will return a critical result on any available update, whereas using this switch still allows you to differentiate between the severity of updates.")
 
-    parser.add_option("-C", "--cache-only",
+    parser.add_argument("-C", "--cache-only",
                       action="store_true",
                       dest="no_cache_update",
                       help="Run entirely from cache and do not update the cache when running YUM. Useful if you have 'yum makecache' cronned so that the nagios check itself doesn't have to do it, possibly speeding up execution (by 1-2 seconds in tests).")
 
-    parser.add_option("-N", "--no-warn-on-lock",
+    parser.add_argument("-N", "--no-warn-on-lock",
                       action="store_true",
                       dest="no_warn_on_lock",
                       help="Return OK instead of WARNING when YUM is locked and fails to check for updates due to another instance running. This is not recommended from the security standpoint, but may be wanted to reduce the number of alerts that may intermittently pop up when someone is running YUM for package management.")
 
-    parser.add_option("--no-warn-on-updates",
+    parser.add_argument("--no-warn-on-updates",
                       action="store_true",
                       dest="no_warn_on_updates",
                       help="Return OK instead of WARNING even when updates are available. This is not recommended from the security standpoint, but may be wanted to disable alerts while the plugin output still shows the number of available updates.")
 
-    parser.add_option("-e", "--enablerepo",
+    parser.add_argument("-e", "--enablerepo",
                       dest="repository_to_enable",
                       help="Explicitly enables a reposity when calling YUM. Can take a comma separated list of repositories. Note that enabling repositories can lead to unexpected results, for example when protected repositories are enabled.")
 
-    parser.add_option("-d", "--disablerepo",
+    parser.add_argument("-d", "--disablerepo",
                       dest="repository_to_disable",
                       help="Explicitly disables a repository when calling YUM. Can take a comma separated list of repositories. Note that disabling repositories can lead to unexpected results, for example when protected repositories are disabled.")
 
-    parser.add_option("--installroot",
+    parser.add_argument("--installroot",
                       dest="installroot",
                       help="Specifies another installation root directory (for example a chroot). See also --installroot in yum(8).")
 
-    parser.add_option("-t", "--timeout",
+    parser.add_argument("-t", "--timeout",
                       dest="timeout",
                       help="Sets a timeout in seconds after which the plugin will exit (defaults to %s seconds)." % DEFAULT_TIMEOUT)
 
-    parser.add_option("-v", "--verbose",
+    parser.add_argument("-v", "--verbose",
                       action="count",
                       dest="verbosity",
                       help="Verbose mode. Can be used multiple times to increase output. Use -vvv for debugging output. By default only one result line is printed as per Nagios standards.")
 
-    parser.add_option("-V", "--version",
+    parser.add_argument("-V", "--version",
                       action="store_true",
                       dest="version",
                       help="Print version number and exit.")
 
-    (options, args) = parser.parse_args()
-
-    if args:
-        parser.print_help()
-        end(UNKNOWN, "Invalid arguments specified.")
+    options = parser.parse_args()
 
     tester.all_updates        = options.all_updates
     tester.no_cache_update    = options.no_cache_update
