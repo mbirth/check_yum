@@ -256,10 +256,9 @@ class YumTester:
         
         output = self.run(cmd)
         
-        re_security_summary_rhel5 = re.compile("Needed \d+ of \d+ packages, for security")
-        re_security_summary_rhel6 = re.compile("\d+ package\(s\) needed for security, out of \d+ available")
-        re_no_security_updates_available_rhel5 = re.compile("No packages needed, for security, \d+ available")
-        re_no_security_updates_available_rhel6 = re.compile("No packages needed for security; \d+ packages available")
+        re_security_summary_rhel5 = re.compile("Needed (\d+) of (\d+) packages, for security")
+        re_security_summary_rhel6 = re.compile("(\d+) package\(s\) needed for security, out of (\d+) available")
+        re_no_security_updates_available = re.compile("No packages needed,? for security[;,] (\d+) (?:packages )?available")
         summary_line_found = False
         updateinfo_line_count = 0
 
@@ -267,25 +266,25 @@ class YumTester:
             if "(updateinfo)" in line:
                 updateinfo_line_count += 1
 
-            if re_no_security_updates_available_rhel5.match(line):
+            match = re_no_security_updates_available.match(line)
+            if match:
                 summary_line_found = True
                 number_security_updates = 0
-                number_total_updates = line.split()[5]
+                number_total_updates = match.group(1)
                 break
-            if re_no_security_updates_available_rhel6.match(line):
+
+            match = re_security_summary_rhel5.match(line)
+            if match:
                 summary_line_found = True
-                number_security_updates = 0
-                number_total_updates = line.split()[5]
+                number_security_updates = m.group(1)
+                number_total_updates    = m.group(2)
                 break
-            if re_security_summary_rhel5.match(line):
+
+            match = re_security_summary_rhel6.match(line)
+            if match:
                 summary_line_found = True
-                number_security_updates = line.split()[1]
-                number_total_updates = line.split()[3]
-                break
-            if re_security_summary_rhel6.match(line):
-                summary_line_found = True
-                number_security_updates = line.split()[0]
-                number_total_updates = line.split()[7]
+                number_security_updates = match.group(1)
+                number_total_updates    = match.group(2)
                 break
         
         if not summary_line_found:
