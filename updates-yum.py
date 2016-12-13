@@ -260,7 +260,12 @@ class YumTester:
         re_no_security_updates_available_rhel5 = re.compile("No packages needed, for security, \d+ available")
         re_no_security_updates_available_rhel6 = re.compile("No packages needed for security; \d+ packages available")
         summary_line_found = False
+        updateinfo_line_count = 0
+
         for line in output:
+            if "(updateinfo)" in line:
+                updateinfo_line_count += 1
+
             if re_no_security_updates_available_rhel5.match(line):
                 summary_line_found = True
                 number_security_updates = 0
@@ -293,7 +298,7 @@ class YumTester:
         
         number_other_updates = number_total_updates - number_security_updates
         
-        if len(output) > number_total_updates + 45:
+        if len(output) - updateinfo_line_count > number_total_updates + 25:
             end(WARNING, "YUM output signature is larger than current known format, please make sure you have upgraded to the latest version of this plugin. If the problem persists, please contact the author for a fix")
         
         return number_security_updates, number_other_updates
