@@ -39,6 +39,7 @@ def end(status, message, perfdata=""):
         print "%i %s %s %s" % (status, SVC_NAME, perfdata, message)
     else:
         print "%i %s - %s" % (status, SVC_NAME, message)
+    sys.exit()
 
 def check_yum_usable():
     """Checks that the YUM program and path are correct and usable - that the program exists and is executable, otherwise exits with error."""
