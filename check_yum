@@ -441,6 +441,7 @@ def main():
     (options, args) = parser.parse_args()
     
     if args:
+        parser.print_help()
         end(UNKNOWN, "Invalid arguments specified.")
     
     tester.all_updates        = options.all_updates
@@ -469,16 +470,6 @@ if __name__ == "__main__":
         raise
     except:
         end(UNKNOWN, "check_yum failed for unknown reasons.")
-
-
-
-
-
-
-
-
-
-
 
 
 
