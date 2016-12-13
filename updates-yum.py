@@ -466,6 +466,8 @@ def main():
 if __name__ == "__main__":
     try:
         main()
+    except KeyboardInterrupt:
+        end(CRITICAL, "Caught Control-C...")
     except SystemExit:
         raise
     except:
