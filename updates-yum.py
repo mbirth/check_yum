@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
 """Check_MK local plugin to check the YUM package management system for package updates. Can optionally alert on any available updates as well as just security related updates."""
@@ -32,7 +32,7 @@ YUM = "/usr/bin/yum"
 
 
 
-def end(status, message, perfdata=""):
+def end(status, message, perfdata={}):
     """Exits the plugin with first arg as the return code and the second arg as the message to output."""
 
     if perfdata:
@@ -40,20 +40,20 @@ def end(status, message, perfdata=""):
         for p, v in perfdata.items():
             pstrings.append("'{}'={:d}".format(p.replace(" ", "_"), v))
         pstring = "|".join(pstrings)
-        print "%i %s %s %s" % (status, SVC_NAME, pstring, message)
+        print("{:d} {} {} {}".format(status, SVC_NAME, pstring, message))
     else:
-        print "%i %s - %s" % (status, SVC_NAME, message)
+        print("{:d} {} - {}".format(status, SVC_NAME, message))
     sys.exit()
 
 def check_yum_usable():
     """Checks that the YUM program and path are correct and usable - that the program exists and is executable, otherwise exits with error."""
 
     if not os.path.exists(YUM):
-        end(UNKNOWN, "%s cannot be found" % YUM)
+        end(UNKNOWN, "{} cannot be found".format(YUM))
     elif not os.path.isfile(YUM):
-        end(UNKNOWN, "%s is not a file" % YUM)
+        end(UNKNOWN, "{} is not a file".format(YUM))
     elif not os.access(YUM, os.X_OK):
-        end(UNKNOWN, "%s is not executable" % YUM)
+        end(UNKNOWN, "{} is not executable".format(YUM))
 
 
 class YumTester:
@@ -104,18 +104,18 @@ class YumTester:
             end(UNKNOWN, "Internal python error - no cmd supplied for run function")
 
         if self.installroot:
-            cmd += " --installroot=%s" % self.installroot
+            cmd += " --installroot={}".format(self.installroot)
         if self.no_cache_update:
             cmd += " -C"
 
         if self.enable_repo:
             for repo in self.enable_repo.split(","):
-                cmd += " --enablerepo=%s" % repo
+                cmd += " --enablerepo={}".format(repo)
         if self.disable_repo:
             for repo in self.disable_repo.split(","):
-                cmd += " --disablerepo=%s" % repo
+                cmd += " --disablerepo={}".format(repo)
 
-        self.vprint(3, "running command: %s" % cmd)
+        self.vprint(3, "running command: {}".format(cmd))
 
         if OLD_PYTHON:
             self.vprint(3, "subprocess not available, probably old python version, using shell instead")
@@ -125,21 +125,21 @@ class YumTester:
         else:
             try:
                 process = Popen( cmd.split(), stdin=PIPE, stdout=PIPE, stderr=STDOUT )
-            except OSError, error:
+            except OSError as error:
                 error = str(error)
                 if error == "No such file or directory":
-                    end(UNKNOWN, "Cannot find utility '%s'" % cmd.split()[0])
-                end(UNKNOWN, "Error trying to run utility '%s' - %s" % (cmd.split()[0], error))
+                    end(UNKNOWN, "Cannot find utility '{}'".format(cmd.split()[0]))
+                end(UNKNOWN, "Error trying to run utility '{}' - {}".format(cmd.split()[0], error))
 
             output = process.communicate()
             returncode = process.returncode
             stdout = output[0]
 
         if stdout == None or stdout == "":
-            end(UNKNOWN, "No output from utility '%s'" % cmd.split()[0])
+            end(UNKNOWN, "No output from utility '{}'".format(cmd.split()[0]))
 
-        self.vprint(3, "Returncode: '%s'\nOutput: '%s'" % (returncode, stdout))
-        output = str(stdout).split("\n")
+        self.vprint(3, "Returncode: '{}'\nOutput: '{}'".format(returncode, stdout))
+        output = str(stdout).split("\\n")
         self.check_returncode(returncode, output)
 
         return output
@@ -162,13 +162,13 @@ class YumTester:
                     end(WARNING, msg)
             else:
                 output = self.strip_output(output)
-                end(UNKNOWN, "%s" % output)
+                end(UNKNOWN, "{}".format(output))
         else:
             if not 'Loading "security" plugin' in output or "Command line error: no such option: --security" in output:
                 end(UNKNOWN, "Security plugin for YUM is required. Try to 'yum install yum-security' and then re-run this plugin. Alternatively, to just alert on any update which does not require the security plugin, try --all-updates")
             else:
                 output = self.strip_output(output)
-                end(UNKNOWN, "%s" % output)
+                end(UNKNOWN, "{}".format(output))
 
 
     def strip_output(self, output):
@@ -185,9 +185,9 @@ class YumTester:
         """Sets an alarm to time out the test."""
 
         if self.timeout == 1:
-            self.vprint(3, "setting plugin timeout to %s second" % self.timeout)
+            self.vprint(3, "setting plugin timeout to {} second".format(self.timeout))
         else:
-            self.vprint(3, "setting plugin timeout to %s seconds" % self.timeout)
+            self.vprint(3, "setting plugin timeout to {} seconds".format(self.timeout))
 
         signal.signal(signal.SIGALRM, self.timeout_signal_handler)
         signal.alarm(self.timeout)
@@ -196,7 +196,7 @@ class YumTester:
     def timeout_signal_handler(self, signum, frame):
         """Function to be called by signal.alarm to kill the plugin."""
 
-        end(UNKNOWN, "YUM nagios plugin has self terminated after exceeding the timeout (%s seconds)" % self.timeout)
+        end(UNKNOWN, "YUM nagios plugin has self terminated after exceeding the timeout ({} seconds)".format(self.timeout))
 
 
     def get_updates(self):
@@ -216,14 +216,14 @@ class YumTester:
     def get_all_updates(self):
         """Gets all updates. Returns a single integer of the number of available updates."""
 
-        cmd = "%s check-update" % YUM
+        cmd = "{} check-update".format(YUM)
 
         output = self.run(cmd)
 
         output2 = "\n".join(output).split("\n\n")
         if self.verbosity >= 4 :
             for section in output2:
-                print "\nSection:\n%s\n" % section
+                print("\nSection:\n{}\n".format(section))
         if len(output2) > 2 or not ( "Setting up repositories" in output2[0] or "Loaded plugins: " in output2[0] or re.search('Loading\s+".+"\s+plugin', output2[0]) ):
             end(WARNING, "YUM output signature does not match current known format. Please make sure you have upgraded to the latest version of this plugin. If the problem persists, please contact the author for a fix")
         if len(output2) == 1:
@@ -256,7 +256,7 @@ class YumTester:
     def get_security_updates(self):
         """Gets all updates, but differentiates between security and normal updates. Returns a tuple of the number of security and normal updates."""
 
-        cmd = "%s --security check-update" % YUM
+        cmd = "{} --security check-update".format(YUM)
 
         output = self.run(cmd)
 
@@ -313,7 +313,7 @@ class YumTester:
         """Starts tests and controls logic flow."""
 
         check_yum_usable()
-        self.vprint(3, "%s - Version %s\n" % (__title__, __version__))
+        self.vprint(3, "{} - Version {}\n".format(__title__, __version__))
 
         self.validate_all_variables()
         self.set_timeout()
@@ -342,7 +342,7 @@ class YumTester:
             if number_updates == 1:
                 message = "1 Update Available"
             else:
-                message = "%s Updates Available" % number_updates
+                message = "{} Updates Available".format(number_updates)
         
         perfdata = {"total": number_updates}
 
@@ -369,7 +369,7 @@ class YumTester:
             if number_security_updates == 1:
                 message = "1 Security Update Available"
             elif number_security_updates > 1:
-                message = "%s Security Updates Available" % number_security_updates
+                message = "{} Security Updates Available".format(number_security_updates)
 
         if number_other_updates != 0:
             if self.warn_on_any_update and status != CRITICAL:
@@ -381,7 +381,7 @@ class YumTester:
             if number_other_updates == 1:
                 message += ". 1 Non-Security Update Available"
             else:
-                message += ". %s Non-Security Updates Available" % number_other_updates
+                message += ". {} Non-Security Updates Available".format(number_other_updates)
 
         perfdata = {"total": (number_security_updates + number_other_updates), "security": number_security_updates, "nonsecurity": number_other_updates}
 
@@ -392,7 +392,7 @@ class YumTester:
         """Prints a message if the first arg is numerically greater than the verbosity level."""
 
         if self.verbosity >= threshold:
-            print "%s" % message
+            print("{}".format(message))
 
 
 def main():
@@ -441,7 +441,7 @@ def main():
     parser.add_argument("-t", "--timeout",
                       default=DEFAULT_TIMEOUT,
                       dest="timeout",
-                      help="Sets a timeout in seconds after which the plugin will exit (defaults to %s seconds)." % DEFAULT_TIMEOUT)
+                      help="Sets a timeout in seconds after which the plugin will exit (defaults to {} seconds).".format(DEFAULT_TIMEOUT))
 
     parser.add_argument("-v", "--verbose",
                       action="count",
@@ -468,7 +468,7 @@ def main():
     tester.warn_on_any_update = options.warn_on_any_update
 
     if options.version:
-        print "%s - Version %s\n" % (__title__, __version__)
+        print("{} - Version {}\n".format(__title__, __version__))
         sys.exit(OK)
 
     result, output, perfdata = tester.test_yum_updates()
