@@ -269,6 +269,7 @@ class YumTester:
         for line in output:
             if "(updateinfo)" in line:
                 updateinfo_line_count += 1
+                continue
 
             match = re_no_security_updates_available.match(line)
             if match:
