@@ -439,12 +439,14 @@ def main():
                       help="Specifies another installation root directory (for example a chroot). See also --installroot in yum(8).")
 
     parser.add_argument("-t", "--timeout",
+                      default=DEFAULT_TIMEOUT,
                       dest="timeout",
                       help="Sets a timeout in seconds after which the plugin will exit (defaults to %s seconds)." % DEFAULT_TIMEOUT)
 
     parser.add_argument("-v", "--verbose",
                       action="count",
                       dest="verbosity",
+                      default=0,
                       help="Verbose mode. Can be used multiple times to increase output. Use -vvv for debugging output. By default only one result line is printed as per Nagios standards.")
 
     parser.add_argument("-V", "--version",
